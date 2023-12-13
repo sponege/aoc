@@ -6,9 +6,11 @@ from util import *
 p, d, t, year, day, inp, lines, expected_ans = getArgs()
 
 ## you don't want to print a lot of debug info if you aren't in debug mode!
+real_print = print
+real_pb = print_board
 if not d:
-    real_print = print
     print = lambda *args, **kwargs: None
+    print_board = lambda *args, **kwargs: None
 
 # some helpful information:
 # the variable p stores what part you are currently on, it's either 1 or 2
@@ -18,11 +20,24 @@ if not d:
 # the variable t is a boolean; it returns if you are in test mode or not
 ans = 'No answer calculated yet'
 
+a = lines[0]
+ans=0
+for i in range(1, len(a)):
+    if a[i] == a[i-1]:
+        ans+=int(a[i])
+
+if a[-1]==a[0]:ans+=int(a[-0])
+
 ## your code goes here
 if p == 1:
     # ans = 1337
     pass
 else: ## part 2
+    for i in range(1, len(a)):
+        if a[i] == a[int((i+(len(a)/2))%len(a))]:
+            ans+=int(a[i])
+
+    if a[len(a)//2]==a[0]:ans+=int(a[0])
     # ans = 13371337
     pass
 
