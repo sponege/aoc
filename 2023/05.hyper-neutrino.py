@@ -35,29 +35,29 @@ if p == 2:
     seeds=list(filter(lambda a: a is not None, seeds))
 print(seeds)
 
-def process(s,m):
+def process(seeds,m):
     if p == 1:
         for a,b,c in m:
             if s>=b and s<b+c:
                 return s-b+a
-        return s
+        return seeds
     else:
         new_seeds=[]
-        for s,e in s:
+        while len(seeds) > 0:
+            s,e = seeds.pop()
             for a,b,c in m:
-                if s >= b and s < b+c:
-                    s=s-b+a
-                    if e > b+c:
-                        new_seeds.append([s,a+c-1])
-                        s=b+c
-                if e >= b and e < b+c:
-                    e=e-b+a
-                    if s < b:
-                        new_seeds.append([a,e])
-                        e=b-1
-            new_seeds.append([s,e])
-            s=new_seeds
-        return s
+                os = max(s, b)
+                oe = min(e, b + c)
+                if os < oe:
+                    new_seeds.append([os - b + a, oe - b + a])
+                    if os > s:
+                        seeds.append([s, os])
+                    if e > oe:
+                        seeds.append([oe, e])
+                    break
+            else:
+                new_seeds.append([s, e])
+        return new_seeds
                 
 
 maps=[[[int(n) for n in r.findall(ns)] for ns in ls.split('\n')[1:]] for ls in inp.split('\n\n')[1:]]
