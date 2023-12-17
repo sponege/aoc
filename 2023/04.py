@@ -16,7 +16,7 @@ ans = 0
 import re
 r=re.compile(r'(\d+)')
 copies=[1 for _ in rl(lines)]
-for i, l in e(lines):
+for i, l in enumerate(lines):
     l=l.split(': ')[1]
     l=l.split(' | ')
     w=r.findall(l[0])
