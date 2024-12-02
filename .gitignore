@@ -1,0 +1,4 @@
+*/*.i
+*/template.py
+state/session
+curday/inputs

@@ -1,0 +1,17 @@
+#!/bin/python3
+
+import sys
+from util import *
+inp = sys.stdin.read()
+lines = inp.splitlines()
+
+bps = [] # blueprints
+for line in lines:
+    sections = [e.strip().split() for e in line.split(':')[1].split('.')]
+    bps.append({
+        'ore_cost': int(sections[0][-2]),
+        'clay_cost': int(sections[1][-2]),
+        'obsidian_cost': {'ore': int(sections[2][-5]), 'clay': int(sections[2][-2])},
+        'geode_cost': {'ore': int(sections[3][-5]), 'obsidian': int(sections[3][-2])}
+    })
+print(bps)
