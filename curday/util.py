@@ -5,7 +5,16 @@ import sys
 
 # progStartTime = time.time()
 
-pp = lambda *args: print(*args, flush=1)
+oldPrint = print
+# print = lambda *args: oldPrint(*args, flush=1)
+def print(*args, end=None):
+    if end: oldPrint(*args, end=end, flush=1)
+    else: oldPrint(*args, flush=1)
+
+import re
+
+ints = lambda s: list(map(int, re.findall(r'-?\d+', s)))
+intss = lambda s: ints(s.replace('-','~'))
 
 # list map: create list from mapping
 lm=lambda f,l:list(map(f,l))
@@ -65,7 +74,7 @@ def getArgs():
     if len(sys.argv) > 1:
         p = (2 if '2' in sys.argv[1] else 1)
         d = 'd' in sys.argv[1]
-        t = 'i' not in sys.argv[1]
+        t = 't' in sys.argv[1]
 
     inp = sys.stdin.read()
 
@@ -79,12 +88,11 @@ def getArgs():
 # a = lm(sqr,a))
 # print(a, type(a))
 
-def findLetter(l):
-    global lines
+def findLetter(l, lines):
     for _ in range(len(lines)):
         line = lines[_]
         if l in line:
-            return (line.find(l), _)
+            return (line.index(l), _)
 
 def locate(pos,debug=0):
     y = pos[1]

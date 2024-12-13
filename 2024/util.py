@@ -1,15 +1,16 @@
 #!/bin/python3
 
 # very useful utils for aoc
-import sys, re, requests, json, os, time
-## beautiful soup is a library that makes parsing html easier
-from bs4 import BeautifulSoup
+import sys
 
-progStartTime = time.time()
+# progStartTime = time.time()
+
+oldPrint = print
+# print = lambda *args: oldPrint(*args, flush=1)
 
 # list map: create list from mapping
 lm=lambda f,l:list(map(f,l))
-tm=lambda f,l:t(map(f,l))
+# tm=lambda f,l:t(map(f,l))
 
 # range length, self explanatory
 rl=lambda t:range(len(t))
@@ -57,42 +58,6 @@ def lms(fs, l):
 def rm(r, l):
     return lm(lambda x: re.findall(r, x)[0], l)
 
-# the submitter!
-# saves some time
-def submit(part: int, ans):
-    ## get year and day from filename
-    year = int(re.findall(r'\d+', sys.path[0])[0])
-    day = int(re.findall(r'\d+', sys.argv[0])[0])
-    print(f"Submitting {bcolors.OKBLUE+bcolors.BOLD}{ans}{bcolors.ENDC} for {year} day {day} {bcolors.OKBLUE+bcolors.BOLD}part {part}{bcolors.ENDC}...")
-
-    ## get session cookie
-    session = session = open('../state/session').readline().strip()
-
-    ## make request
-    url = f'https://adventofcode.com/{year}/day/{day}/answer'
-    data = {'level': part, 'answer': ans}
-    headers = {'Cookie': f'session={session}'}
-    r = requests.post(url, data=data, headers=headers)
-
-    ## parse response
-    soup = BeautifulSoup(r.text, 'html.parser')
-    print(soup.find('main').text.strip())
-
-def final(t, p, ans, expected_ans):
-    # time.time() returns the current time in seconds
-    print(f"Part {p} took {time.time()-progStartTime} seconds")
-    if t: # if running on test input
-        try:
-            assert ans == expected_ans # check if answer is correct
-        except:
-            print(f"{bcolors.FAIL}Test case failed!{bcolors.ENDC} Expected {bcolors.OKBLUE+bcolors.BOLD}{expected_ans}{bcolors.ENDC}, got {bcolors.OKBLUE+bcolors.BOLD}{ans}{bcolors.ENDC}")
-            exit(1)
-        print(bcolors.OKGREEN + bcolors.BOLD + 'Test passed!!!!' + bcolors.ENDC + f' Expected {bcolors.OKBLUE+bcolors.BOLD}{expected_ans}{bcolors.ENDC}, got {bcolors.OKBLUE+bcolors.BOLD}{ans}{bcolors.ENDC}')
-    else: # if running on real input
-        # submit answer to AoC servers 
-        submit(p, ans)
-
-
 def getArgs():
     p = 1 # part
     d = False # debug
@@ -101,39 +66,21 @@ def getArgs():
     if len(sys.argv) > 1:
         p = (2 if '2' in sys.argv[1] else 1)
         d = 'd' in sys.argv[1]
-        t = 'i' not in sys.argv[1]
+        t = 't' in sys.argv[1]
 
-    ## get year and day from filename
-    year = int(re.findall(r'\d+', sys.path[0])[0])
-    day = int(re.findall(r'\d+', sys.argv[0])[0])
+    inp = sys.stdin.read()
 
-    expected_ans = 'No expected answer provided' # change this to the expected answer for the test case
-    # I would advise doing it with the CLI to save time tho
-    if len(sys.argv) > 2:
-        try: expected_ans = int(sys.argv[2]) ## get test case quickly from command line arguments
-        except: expected_ans = sys.argv[2]
+    lines = inp.strip().splitlines()
 
-
-    if t:
-        inp = sys.stdin.read()
-    else:
-        inp = open(f'{str(day).zfill(2)}.i').read()
-
-    lines = inp.splitlines()
-
-    return (p, d, t, year, day, inp, lines, expected_ans)
-
-
-
-
+    return (p, d, t, inp, lines)
 
 # examples
-sqr=lambda i:i*i
+# sqr=lambda i:i*i
 # a=[3,5,9]
 # a = lm(sqr,a))
 # print(a, type(a))
 
-def findLetter(l):
+def findLetter(l, lines):
     for _ in range(len(lines)):
         line = lines[_]
         if l in line:
@@ -254,4 +201,3 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 addP = lambda p1, p2: (p1[0]+p2[0],p1[1]+p2[1],p1[2]+p2[2]) if len(p1) == 3 else (p1[0]+p2[0],p1[1]+p2[1])
-

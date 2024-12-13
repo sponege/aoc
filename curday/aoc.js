@@ -5,8 +5,8 @@ var keyPromise = new Promise((res, rej) => {
 });
 var stdin;
 import fs from "fs";
-import fetch from "node-fetch";
 import { exec, spawn } from "child_process";
+import { JSDOM } from "jsdom";
 const session = readFile("../state/session");
 var state = JSON.parse(readFile("../state/state.json"));
 
@@ -114,12 +114,61 @@ function a() {}
     await fs.writeFileSync("../state/state.json", JSON.stringify(state));
   }
 
+  async function submit(answer) {
+    console.log(
+      `Submitting ${colors.blue + colors.bold}${answer}${colors.end} for part ${
+        colors.blue + colors.bold
+      }${state.part}${colors.end}...`
+    );
+    let url = `https://adventofcode.com/${state.year}/day/${state.day}/answer`;
+    let data = { level: state.part, answer };
+    let response = await get(url, {
+      method: "POST",
+      headers: {
+        Cookie: `session=${session};`,
+        "User-Agent":
+          "github.com/sponege/aoc by apples@jappl.es (still testing right now so sorry)",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams(data),
+    });
+    /*
+    if (response.status != 200) {
+      console.log(`uh oh server responded with code ${response.status}`);
+      return;
+    }
+		*/
+    if (!response.includes("main")) {
+      console.log(response);
+      console.log(
+        "UH OH RED ALERT (wtf wrong with advent of code servers this time??? hopefully its not your wifi)"
+      );
+      return;
+    }
+    let dom = new JSDOM(response);
+    console.log(dom.window.document.querySelector("main").textContent.trim());
+    if (response.includes("That's the right answer")) {
+      fs.writeFileSync(
+        `../${state.year}/${state.day}.p${state.part}.${crypto
+          .getRandomValues(new Uint8Array(1))[0]
+          .toString(16)}.py`,
+        fs.readFileSync("./curday.py").toString("utf8")
+      );
+      state.part = 2;
+      await fs.writeFileSync("../state/state.json", JSON.stringify(state));
+    }
+    if (response.includes("this victory or")) {
+      console.log("gg");
+      process.exit();
+    }
+  }
+
   let inputPath = `inputs/${state.year}/${state.day
     .toString()
     .padStart(2, "0")}.txt`;
   let input = "No input retrieved!!";
   let resultText = "";
-  if (state) state.part = 1;
+  if (state.part == null) state.part = 1;
 
   if (!fs.existsSync(inputPath)) {
     console.log("Downloading input...");
@@ -134,53 +183,125 @@ function a() {}
     });
 
     fs.writeFileSync(inputPath, input);
+    fs.writeFileSync("./curday-input.txt", input);
     resultText = "Downloaded input";
   } else {
     console.log("Reading input from file...");
     input = await readFile(inputPath);
     resultText = "Got input from file";
   }
+  fs.writeFileSync("./curday-input.txt", input);
   console.log("-".repeat(20));
-  console.log(input);
+  if (input.length < 1000) console.log(input);
+  else console.log(`(${input.length} bytes of input)`);
   console.log("-".repeat(20));
   console.log(resultText);
 
   let file = "curday.py";
+  let modifiedFile;
   let _;
 
+  let child, output, answer, type, changed, code;
+
   while (1) {
-    console.log(`Running ${file}...`);
-    console.log("-".repeat(20));
-    let child = runCode(file, input);
-    let output = "";
-    let answer = null;
+    let killed = false;
+    for (let [curInp, inputType] of [
+      [input, "real input"],
+      [readFile("./test.txt"), "test input"],
+    ]) {
+      if (killed) break;
+      if (curInp.length == 0) continue;
+      console.log(`Running ${file} with ${inputType}...`);
+      console.log("-".repeat(20));
+      child = runCode(file, curInp, inputType == "test input");
+      // output = ""; // i dont even use this variable, im dumb, i created this variable during development and forgot about it
+      let curans = null;
 
-    child.stdout.on("data", (data) => {
-      let out = data.toString().trim();
-      if (out.includes("ans")) answer = out.split`:`[1].trim();
-      else {
-        output += out;
-        console.log(out);
+      child.stdout.on("data", (data) => {
+        let out = data.toString().trim();
+        for (let line of out.split`\n`) {
+          if (line.includes("ans")) curans = out.split`ans:`[1].trim();
+          else {
+            // output += out;
+            console.log(line);
+          }
+        }
+      });
+
+      child.stderr.on("data", (data) => {
+        console.error(data.toString());
+      });
+
+      code = null;
+      changed = false;
+
+      while (1) {
+        [type, code] = await Promise.race([
+          new Promise((res) => child.on("close", (a) => res(["exit", a]))),
+          new Promise((res) => keyPromise.then((a) => res(["key", a]))),
+          // filechange,
+        ]);
+        if (type == "change") changed = true;
+        if (changed) {
+          console.log("> File change detected so killing program");
+          modifiedFile = "Some file"; // no time to fix bug
+        }
+        if ((type == "key" && code == "t") || changed) {
+          child.kill();
+          killed = true;
+          console.log("> Killed process (from aoc.js)");
+        }
+        if (type == "exit") break;
       }
-    });
+      console.log("-".repeat(20));
 
-    child.stderr.on("data", (data) => {
-      console.error(data.toString());
-    });
+      if (code != null) console.log(`Program exited gracefully`);
+      else console.log(`Program was terminated`);
 
-    let code = await new Promise((res) => child.on("close", res));
-    console.log("-".repeat(20));
-
-    console.log(`Program exited with code ${code}`);
-
-    if (answer != null) {
-      console.log(
-        `Found answer ${colors.blue + colors.bold}${answer}${colors.end}`
-      );
+      if (curans != null) {
+        console.log(
+          `Found answer ${colors.blue + colors.bold}${curans}${colors.end}`
+        );
+        if (inputType == "real input") answer = curans;
+      }
     }
 
-    console.log("Waiting for file changes...\n");
-    [_, file] = await filechange;
+    if (!changed) {
+      let areyousure = 0;
+      console.log("Waiting for file changes...\n");
+      while (1) {
+        let [type, value] = await Promise.race([
+          filechange,
+          new Promise((r) => keyPromise.then((k) => r(["key", k]))),
+        ]);
+        if (type == "key") {
+          if (value == "s") {
+            areyousure++;
+            if (areyousure < 2) {
+              console.log(
+                `Are you sure you want to submit ${
+                  colors.blue + colors.bold
+                }${answer}${colors.end} for part ${colors.blue + colors.bold}${
+                  state.part
+                }${colors.end}?`
+              );
+            } else {
+              let response = await submit(answer);
+              console.log("\nWaiting...");
+              areyousure = 0;
+              continue;
+            }
+          }
+        } else {
+          if (type == "change") {
+            modifiedFile = value;
+            areyousure = 0;
+            break;
+          }
+        }
+      }
+    }
+    console.log(`${modifiedFile} was modified`);
     await sleep(10);
   }
 })().then(process.exit);
@@ -218,7 +339,7 @@ function setupStdin() {
   };
 }
 
-let watchedFiles = ["curday.py", "test.py"];
+let watchedFiles = ["curday.py", "test.py", "util.py", "test.txt"];
 
 function setupWatchdog() {
   fs.watch("./", (eventType, filename) => {
@@ -285,8 +406,8 @@ async function get(url, options) {
   return text.trim();
 }
 
-function runCode(file, inp) {
-  let child = spawn("pypy3", [file]);
+function runCode(file, inp, test) {
+  let child = spawn("pypy3", [file, test ? "t" : ""]);
   child.stdin.write(inp);
   child.stdin.end();
 
