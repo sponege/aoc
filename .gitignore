@@ -2,3 +2,5 @@
 */template.py
 state/session
 curday/inputs
+curday/node_modules
+*/__pycache__
