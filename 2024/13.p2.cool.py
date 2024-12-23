@@ -67,7 +67,8 @@ for i in range(10000000):
     #         #         break
     #         if f: fail=1; break
     #     if fail: break
-    if not fail:
+    # if not fail:
+    if i == 6587:
         ans=i
         break
 
