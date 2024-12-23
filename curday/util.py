@@ -6,7 +6,7 @@ import sys
 # progStartTime = time.time()
 
 oldPrint = print
-# print = lambda *args: oldPrint(*args, flush=1)
+print = lambda *args: oldPrint(*args, flush=1)
 
 # list map: create list from mapping
 lm=lambda f,l:list(map(f,l))
