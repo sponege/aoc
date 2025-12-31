@@ -80,7 +80,7 @@ def getArgs():
 
     lines = inp.strip().splitlines()
 
-    return (p, d, t, inp, lines)
+    return (p, d, t, inp.strip(), lines)
 
 # examples
 # sqr=lambda i:i*i

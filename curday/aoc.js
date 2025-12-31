@@ -148,10 +148,12 @@ function a() {}
     let dom = new JSDOM(response);
     console.log(dom.window.document.querySelector("main").textContent.trim());
     if (response.includes("That's the right answer")) {
-      fs.writeFileSync(
-        `../${state.year}/${state.day}.p${state.part}.${crypto
+      let fileName = `../${state.year}/${state.day.toString().padStart(2, '0')}.p${state.part}.py`
+      if (fs.existsSync(fileName)) fileName = `../${state.year}/${state.day.toString().padStart(2, '0')}.p${state.part}.${crypto
           .getRandomValues(new Uint8Array(1))[0]
-          .toString(16)}.py`,
+          .toString(16)}.py`;
+      fs.writeFileSync(
+        fileName,
         fs.readFileSync("./curday.py").toString("utf8")
       );
       state.part = 2;
@@ -181,7 +183,9 @@ function a() {}
           "github.com/sponege/aoc by apples@jappl.es (still testing right now so sorry)",
       },
     });
-
+    
+    let path = `inputs/${state.year}`
+    if (!fs.existsSync(path)) fs.mkdirSync(path)
     fs.writeFileSync(inputPath, input);
     fs.writeFileSync("./curday-input.txt", input);
     resultText = "Downloaded input";
