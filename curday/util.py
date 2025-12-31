@@ -6,9 +6,6 @@ import sys
 # progStartTime = time.time()
 
 oldPrint = print
-<<<<<<< HEAD
-print = lambda *args: oldPrint(*args, flush=1)
-=======
 # print = lambda *args: oldPrint(*args, flush=1)
 def print(*args, end=None):
     if end: oldPrint(*args, end=end, flush=1)
@@ -18,7 +15,6 @@ import re
 
 ints = lambda s: list(map(int, re.findall(r'-?\d+', s)))
 intss = lambda s: ints(s.replace('-','~'))
->>>>>>> ee7cd9e8adec6edc9eab2467ad577fa203a410ff
 
 # list map: create list from mapping
 lm=lambda f,l:list(map(f,l))

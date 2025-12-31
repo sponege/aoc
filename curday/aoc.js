@@ -214,10 +214,7 @@ function a() {}
       [readFile("./test.txt"), "test input"],
     ]) {
       if (killed) break;
-<<<<<<< HEAD
-=======
       if (curInp.length == 0) continue;
->>>>>>> ee7cd9e8adec6edc9eab2467ad577fa203a410ff
       console.log(`Running ${file} with ${inputType}...`);
       console.log("-".repeat(20));
       child = runCode(file, curInp, inputType == "test input");
@@ -227,11 +224,7 @@ function a() {}
       child.stdout.on("data", (data) => {
         let out = data.toString().trim();
         for (let line of out.split`\n`) {
-<<<<<<< HEAD
-          if (line.includes("ans")) curans = out.split`:`[1].trim();
-=======
           if (line.includes("ans")) curans = out.split`ans:`[1].trim();
->>>>>>> ee7cd9e8adec6edc9eab2467ad577fa203a410ff
           else {
             // output += out;
             console.log(line);
